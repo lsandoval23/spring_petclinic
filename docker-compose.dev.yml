@@ -1,0 +1,41 @@
+
+# Version de la sintaxis del archivo .yml, tiene que ser compatible con la version
+# de docker-compose que se tiene
+version: '3.8'
+# El servicio hace referencia a cada perfil o aplicacion que se tendra en el proyecto,
+# cada perfil genera una imagen y su correspondiente contenedor.
+services:
+  # App de spring boot
+  petclinic:
+    build:  # Parametros para la construccion de la imagen
+      context: .  # Ubicacion del Dockerfile
+      target: production # Perfil del Dockerfile si tuviera varios
+    ports:  # Configuracion para la apertura de puertos
+      - "8000:8000"
+      - "8080:8080"
+    environment:  # Seteamos variables de entorno que la imagen requiera
+      - SERVER_PORT=8080
+      - MYSQL_URL=jdbc:mysql://mysqlserver/petclinic
+    volumes:  # Creamos volumenes (bind mountain)
+      - ./:/app  # (Directorio local a la carpeta /app del contenedor)
+    depends_on:
+      - mysqlserver
+
+  # Servicio de mysql
+  mysqlserver:
+    image: mysql:8.0  # No se crea a partir de un docker file, si no directamente a partir de la
+                      # imagen
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_USER=petclinic
+      - MYSQL_PASSWORD=petclinic
+      - MYSQL_DATABASE=petclinic
+    volumes:  # hacemos referencia a volumenes para los datos
+      - mysql_data:/var/lib/mysql
+      - mysql_config:/etc/mysql/conf.d
+volumes:  # Creacion de los volumenes
+  mysql_data:
+  mysql_config:
